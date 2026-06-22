@@ -8,6 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
         sort: 'newest'
     };
 
+    // Theme Toggle State Init
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
     // DOM Elements
     const btnRefresh = document.getElementById('btn-refresh');
     const cacheIndicator = document.getElementById('cache-indicator');
@@ -32,6 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectionCount = document.getElementById('selection-count');
     const btnTweetSelected = document.getElementById('btn-tweet-selected');
     const btnClearSelection = document.getElementById('btn-clear-selection');
+
+    // Utility actions
+    const themeToggle = document.getElementById('theme-toggle');
+    const btnExport = document.getElementById('btn-export');
 
     // Modal DOM Elements
     const tweetModal = document.getElementById('tweet-modal');
@@ -60,6 +68,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================================
     // EVENT LISTENERS
     // ==========================================================================
+
+    // Theme toggle handler
+    themeToggle.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', nextTheme);
+        localStorage.setItem('theme', nextTheme);
+    });
+
+    // CSV export handler
+    btnExport.addEventListener('click', () => {
+        // If there are selected items, export those. Otherwise, export currently filtered items.
+        const itemsToExport = selectedIds.size > 0 
+            ? releases.filter(item => selectedIds.has(item.id)) 
+            : getFilteredItems();
+            
+        if (itemsToExport.length === 0) {
+            alert('No release notes matches to export.');
+            return;
+        }
+        
+        exportToCSV(itemsToExport);
+    });
 
     // Refresh controls
     btnRefresh.addEventListener('click', () => fetchReleases(true));
@@ -295,6 +326,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         <line x1="10" y1="14" x2="21" y2="3"></line>
                     </svg>
                 </a>
+                <button class="btn-card-action btn-card-copy" title="Copy update text to clipboard" onclick="event.stopPropagation();">
+                    <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <svg class="check-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color: #10b981;">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </button>
                 <button class="btn-card-action btn-card-tweet" title="Tweet about this update" onclick="event.stopPropagation();">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
@@ -305,11 +345,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Card Selection Event
         card.addEventListener('click', (e) => {
-            // If the user clicked a link inside the card, don't trigger selection
-            if (e.target.tagName === 'A' || e.target.closest('a')) {
+            // If the user clicked interactive actions inside the card, don't trigger card selection
+            if (e.target.tagName === 'A' || e.target.closest('a') || e.target.closest('button')) {
                 return;
             }
             toggleSelection(item.id);
+        });
+
+        // Copy plain text to clipboard
+        const cardCopyBtn = card.querySelector('.btn-card-copy');
+        cardCopyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const copyIcon = cardCopyBtn.querySelector('.copy-icon');
+            const checkIcon = cardCopyBtn.querySelector('.check-icon');
+            
+            navigator.clipboard.writeText(item.text_content).then(() => {
+                cardCopyBtn.classList.add('copied');
+                copyIcon.classList.add('hidden');
+                checkIcon.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    cardCopyBtn.classList.remove('copied');
+                    copyIcon.classList.remove('hidden');
+                    checkIcon.classList.add('hidden');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
         });
 
         // Single Tweet Button inside card
@@ -408,6 +470,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================================================
+    // EXPORT TO CSV LOGIC
+    // ==========================================================================
+
+    function exportToCSV(items) {
+        // Headers
+        const headers = ['ID', 'Date', 'Type', 'Description', 'Link'];
+        
+        // Escape helper for CSV cells (UTF-8 safe)
+        const escapeCSV = (text) => {
+            if (text === null || text === undefined) return '';
+            let stringVal = String(text).trim();
+            // Double up double quotes
+            stringVal = stringVal.replace(/"/g, '""');
+            // Wrap in double quotes if it contains separator character, quotes, or newlines
+            if (stringVal.includes(',') || stringVal.includes('"') || stringVal.includes('\n') || stringVal.includes('\r')) {
+                return `"${stringVal}"`;
+            }
+            return stringVal;
+        };
+        
+        const rows = [
+            headers.join(','),
+            ...items.map(item => [
+                escapeCSV(item.id),
+                escapeCSV(item.formatted_date),
+                escapeCSV(item.type),
+                escapeCSV(item.text_content),
+                escapeCSV(item.link)
+            ].join(','))
+        ];
+        
+        // Prepend UTF-8 BOM so Excel opens emojis/unicode characters correctly
+        const csvContent = "\uFEFF" + rows.join('\r\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `bigquery_release_notes_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // ==========================================================================
     // TWITTER INTEGRATION & PREVIEW MODAL
     // ==========================================================================
 
@@ -418,8 +526,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const item = items[0];
             const emoji = categoryEmojis[item.type] || '📝';
             // Calculate a safe truncation length for the description to fit Twitter's limit
-            // Intent length roughly:
-            // "🚀 BigQuery Feature (June 15, 2026):\n...\n\nRead more: https://docs.cloud.google.com/bigquery/docs/release-notes#June_15_2026\n#BigQuery #GoogleCloud"
             const header = `${emoji} BigQuery ${item.type} (${item.formatted_date}):\n`;
             const footer = `\n\nRead more: ${item.link}\n#BigQuery #GoogleCloud`;
             
