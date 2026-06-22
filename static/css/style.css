@@ -1084,3 +1084,91 @@ html:not([data-theme="light"]) .moon-icon {
     color: var(--text-primary);
     text-decoration: underline;
 }
+
+/* ==========================================================================
+   SLIDING THEME SWITCH CONTROLS
+   ========================================================================== */
+.theme-switch-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.theme-switch {
+    display: inline-block;
+    height: 28px;
+    position: relative;
+    width: 52px;
+    cursor: pointer;
+}
+
+.theme-switch input {
+    display: none;
+}
+
+.theme-switch .slider {
+    background-color: rgba(148, 163, 184, 0.15);
+    border: 1px solid var(--border-color);
+    border-radius: 34px;
+    bottom: 0;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: var(--transition-smooth);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.theme-switch .slider:before {
+    background-color: var(--color-accent);
+    bottom: 3px;
+    content: "";
+    height: 20px;
+    left: 4px;
+    position: absolute;
+    transition: var(--transition-smooth);
+    width: 20px;
+    border-radius: 50%;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Checked state: moves slider knob to the right and turns it golden yellow */
+.theme-switch input:checked + .slider {
+    background-color: rgba(99, 102, 241, 0.1);
+}
+
+.theme-switch input:checked + .slider:before {
+    transform: translateX(22px);
+    background-color: #f59e0b; /* Golden Yellow for light mode */
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
+/* Emoji positions inside switch */
+.slider-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    user-select: none;
+    transition: var(--transition-smooth);
+}
+
+.sun-icon-slider {
+    right: 8px;
+    opacity: 0.3;
+}
+
+.moon-icon-slider {
+    left: 8px;
+    opacity: 1;
+}
+
+/* Visibility updates based on selected state */
+.theme-switch input:checked + .slider .sun-icon-slider {
+    opacity: 1;
+}
+
+.theme-switch input:checked + .slider .moon-icon-slider {
+    opacity: 0.3;
+}

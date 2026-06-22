@@ -11,6 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Theme Toggle State Init
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
+    const themeCheckbox = document.getElementById('theme-checkbox');
+    if (themeCheckbox) {
+        themeCheckbox.checked = (savedTheme === 'light');
+    }
 
     // DOM Elements
     const btnRefresh = document.getElementById('btn-refresh');
@@ -38,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnClearSelection = document.getElementById('btn-clear-selection');
 
     // Utility actions
-    const themeToggle = document.getElementById('theme-toggle');
     const btnExport = document.getElementById('btn-export');
 
     // Modal DOM Elements
@@ -70,12 +73,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================================
 
     // Theme toggle handler
-    themeToggle.addEventListener('click', () => {
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-        const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', nextTheme);
-        localStorage.setItem('theme', nextTheme);
-    });
+    if (themeCheckbox) {
+        themeCheckbox.addEventListener('change', () => {
+            const nextTheme = themeCheckbox.checked ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('theme', nextTheme);
+        });
+    }
 
     // CSV export handler
     btnExport.addEventListener('click', () => {
