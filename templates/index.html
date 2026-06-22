@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigQuery Release Notes Explorer</title>
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Main Style -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Background decorative blobs -->
+        <div class="bg-blob bg-blob-1"></div>
+        <div class="bg-blob bg-blob-2"></div>
+        <div class="bg-blob bg-blob-3"></div>
+
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-area">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="url(#logo-grad-1)"/>
+                            <path d="M2 17L12 22L22 17M2 12L12 17L22 12" stroke="url(#logo-grad-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <defs>
+                                <linearGradient id="logo-grad-1" x1="2" y1="2" x2="22" y2="12" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#38bdf8"/>
+                                    <stop offset="1" stop-color="#818cf8"/>
+                                </linearGradient>
+                                <linearGradient id="logo-grad-2" x1="2" y1="12" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#818cf8"/>
+                                    <stop offset="1" stop-color="#c084fc"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1>BigQuery <span>Release Notes</span></h1>
+                        <p class="subtitle">Stay updated with the latest Google BigQuery changes, announcements, and features.</p>
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <span id="cache-indicator" class="cache-badge hidden" title="Data loaded from local cache. Click refresh to check for new updates.">Cached</span>
+                    <button id="btn-refresh" class="btn btn-primary" title="Refresh Release Notes">
+                        <svg class="icon spinner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                        </svg>
+                        <span>Refresh Feed</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Filter Bar -->
+            <section class="filter-section card">
+                <div class="filter-grid">
+                    <!-- Search -->
+                    <div class="filter-group search-group">
+                        <label for="search-input">Search Updates</label>
+                        <div class="input-wrapper">
+                            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" id="search-input" placeholder="Search keywords, e.g., Gemini, BQML, embedding...">
+                            <button id="clear-search" class="clear-btn hidden" type="button">&times;</button>
+                        </div>
+                    </div>
+
+                    <!-- Type Filter -->
+                    <div class="filter-group">
+                        <label for="type-filter">Filter by Type</label>
+                        <select id="type-filter" class="custom-select">
+                            <option value="all">All Types</option>
+                            <option value="Feature">🚀 Feature</option>
+                            <option value="Changed">🔄 Changed</option>
+                            <option value="Deprecated">⚠️ Deprecated</option>
+                            <option value="Fix">🔧 Fix</option>
+                            <option value="Resolved">✅ Resolved</option>
+                            <option value="Issue">🐛 Issue</option>
+                            <option value="Announcement">📢 Announcement</option>
+                            <option value="Update">📝 Other Update</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Sorting -->
+                    <div class="filter-group">
+                        <label for="sort-filter">Sort Order</label>
+                        <select id="sort-filter" class="custom-select">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Stats summary -->
+                <div class="filter-stats">
+                    <div class="stats-text" id="stats-summary">Loading release notes...</div>
+                    <div class="selection-actions hidden" id="selection-header-actions">
+                        <button id="btn-select-all" class="btn btn-text">Select All Page</button>
+                        <button id="btn-clear-all" class="btn btn-text btn-text-danger">Deselect All</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cards Grid -->
+            <section class="results-section">
+                <!-- Skeleton Loading -->
+                <div id="loading-container" class="cards-grid">
+                    <!-- Skeleton Cards -->
+                    <div class="card skeleton-card">
+                        <div class="skeleton skeleton-header"></div>
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-footer"></div>
+                    </div>
+                    <div class="card skeleton-card">
+                        <div class="skeleton skeleton-header"></div>
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-footer"></div>
+                    </div>
+                    <div class="card skeleton-card">
+                        <div class="skeleton skeleton-header"></div>
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-footer"></div>
+                    </div>
+                </div>
+
+                <!-- Error Container -->
+                <div id="error-container" class="card error-card hidden">
+                    <div class="error-icon">⚠️</div>
+                    <h3>Failed to Fetch Release Notes</h3>
+                    <p id="error-message">Unknown error occurred. Please check your internet connection and try again.</p>
+                    <button id="btn-retry" class="btn btn-secondary">Retry</button>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-container" class="card empty-card hidden">
+                    <div class="empty-icon">🔍</div>
+                    <h3>No Release Notes Found</h3>
+                    <p>No updates match your active search filters. Try clearing some query parameters.</p>
+                    <button id="btn-reset-filters" class="btn btn-secondary">Reset Filters</button>
+                </div>
+
+                <!-- Real Cards Grid -->
+                <div id="cards-container" class="cards-grid hidden">
+                    <!-- Cards will be dynamically injected here by JS -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Floating Selection Bar -->
+        <div id="floating-bar" class="floating-bar hidden">
+            <div class="floating-bar-content">
+                <div class="selection-info">
+                    <span class="selection-count" id="selection-count">0</span>
+                    <span class="selection-label">updates selected</span>
+                </div>
+                <div class="floating-bar-actions">
+                    <button id="btn-tweet-selected" class="btn btn-accent btn-tweet">
+                        <svg class="icon twitter-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                        <span>Tweet Selected</span>
+                    </button>
+                    <button id="btn-clear-selection" class="btn btn-secondary" title="Clear selection">
+                        &times;
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tweet Preview Modal -->
+        <div id="tweet-modal" class="modal hidden">
+            <div class="modal-backdrop" id="modal-backdrop"></div>
+            <div class="modal-content card">
+                <div class="modal-header">
+                    <h2>Tweet Preview</h2>
+                    <button class="btn-close" id="btn-close-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="tweet-box-container">
+                        <div class="tweet-avatar">
+                            <!-- Placeholder avatar resembling BigQuery logo -->
+                            <div class="bq-avatar">BQ</div>
+                        </div>
+                        <div class="tweet-box-content">
+                            <div class="tweet-username-row">
+                                <span class="display-name">Cloud Explorer</span>
+                                <span class="username">@gcp_explorer</span>
+                            </div>
+                            <textarea id="tweet-textarea" rows="8" maxlength="280" class="tweet-textarea"></textarea>
+                            <div class="tweet-counter-row">
+                                <span id="char-counter" class="char-counter">0 / 280</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button id="btn-cancel-tweet" class="btn btn-secondary">Cancel</button>
+                        <button id="btn-publish-tweet" class="btn btn-accent btn-tweet">
+                            <svg class="icon twitter-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                            <span>Post on X</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>BigQuery Release Notes Explorer &bull; Built with Python Flask &amp; Vanilla Web Stack</p>
+            <p class="source-link">Source feed: <a href="https://docs.cloud.google.com/feeds/bigquery-release-notes.xml" target="_blank" rel="noopener noreferrer">Google Cloud XML Feed</a></p>
+        </footer>
+    </div>
+</body>
+</html>
